@@ -1,0 +1,134 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-10-02 00:02:17.353771",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "is_nsc_initialized",
+  "section_break_pbrn",
+  "host",
+  "column_break_dgrc",
+  "port",
+  "section_break_qhid",
+  "nsc_directory",
+  "operator_id",
+  "column_break_xpsa",
+  "system_operator",
+  "system_user_id",
+  "section_break_vntw",
+  "warning_message",
+  "accounts"
+ ],
+ "fields": [
+  {
+   "fieldname": "host",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Host",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_dgrc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "port",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Port",
+   "non_negative": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_qhid",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_xpsa",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_nsc_initialized",
+   "fieldtype": "Check",
+   "label": "Is NSC Initialized",
+   "read_only": 1
+  },
+  {
+   "fieldname": "nsc_directory",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "NSC Directory",
+   "read_only_depends_on": "eval: doc.is_nsc_initialized",
+   "reqd": 1
+  },
+  {
+   "default": "admin",
+   "fieldname": "system_operator",
+   "fieldtype": "Data",
+   "label": "System Operator",
+   "read_only_depends_on": "eval: doc.is_nsc_initialized",
+   "reqd": 1
+  },
+  {
+   "fieldname": "operator_id",
+   "fieldtype": "Data",
+   "label": "Operator ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "system_user_id",
+   "fieldtype": "Data",
+   "label": "System User ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_pbrn",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_vntw",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "accounts",
+   "fieldtype": "Table",
+   "label": "Accounts",
+   "options": "NATS Account",
+   "read_only": 1
+  },
+  {
+   "fieldname": "warning_message",
+   "fieldtype": "HTML",
+   "label": "Warning Message",
+   "options": "<span style=\"color: red\"><b>Note : </b>Never remove rows from child table manually. Instead use <b>Manage Accounts</b> actions.</span>"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2025-10-04 14:56:32.513133",
+ "modified_by": "Administrator",
+ "module": "Message Broker",
+ "name": "NATS Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
