@@ -59,9 +59,6 @@ class NSC:
 			# Create account with same name as operator
 			self.add_account(self.operator, sync=False)
 
-			# Create user with same name as operator in the operator account
-			self.add_user(self.operator, self.operator, pub=[">"], sub=[">"])
-
 		except Exception as e:
 			self.cleanup()
 			raise e
@@ -103,6 +100,10 @@ class NSC:
 					"--js-enable=0",
 				]
 			)
+
+			# Create user with same name as admin account
+			self.add_user(account_name, account_name, pub=[">"], sub=[">"])
+
 			if sync:
 				self.push_account(account_name)
 			return self.get_jwt_dict("account", account_name).get("sub")
