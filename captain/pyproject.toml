@@ -1,14 +1,16 @@
 [project]
 name = "captain"
-authors = [
-    { name = "Frappe Cloud", email = "cloud@frappe.io"}
-]
+authors = [{ name = "Frappe Cloud", email = "cloud@frappe.io" }]
 description = "Global controlplane to manage different part of container syste"
 requires-python = ">=3.10"
 readme = "README.md"
 dynamic = ["version"]
 dependencies = [
     # "frappe~=15.0.0" # Installed and managed by bench.
+    "PyJWT~=2.10.1",
+    "nats-py~=2.11.0",
+    "nkeys~=0.2.1",
+    "nest_asyncio~=1.6.0",
 ]
 
 [build-system]
@@ -24,29 +26,21 @@ line-length = 110
 target-version = "py310"
 
 [tool.ruff.lint]
-select = [
-    "F",
-    "E",
-    "W",
-    "I",
-    "UP",
-    "B",
-    "RUF",
-]
+select = ["F", "E", "W", "I", "UP", "B", "RUF"]
 ignore = [
-    "B017", # assertRaises(Exception) - should be more specific
-    "B018", # useless expression, not assigned to anything
-    "B023", # function doesn't bind loop variable - will have last iteration's value
-    "B904", # raise inside except without from
-    "E101", # indentation contains mixed spaces and tabs
-    "E402", # module level import not at top of file
-    "E501", # line too long
-    "E741", # ambiguous variable name
-    "F401", # "unused" imports
-    "F403", # can't detect undefined names from * import
-    "F405", # can't detect undefined names from * import
-    "F722", # syntax error in forward type annotation
-    "W191", # indentation contains tabs
+    "B017",  # assertRaises(Exception) - should be more specific
+    "B018",  # useless expression, not assigned to anything
+    "B023",  # function doesn't bind loop variable - will have last iteration's value
+    "B904",  # raise inside except without from
+    "E101",  # indentation contains mixed spaces and tabs
+    "E402",  # module level import not at top of file
+    "E501",  # line too long
+    "E741",  # ambiguous variable name
+    "F401",  # "unused" imports
+    "F403",  # can't detect undefined names from * import
+    "F405",  # can't detect undefined names from * import
+    "F722",  # syntax error in forward type annotation
+    "W191",  # indentation contains tabs
     "UP030", # Use implicit references for positional format fields (translations)
     "UP031", # Use format specifiers instead of percent format
     "UP032", # Use f-string instead of `format` call (translations)

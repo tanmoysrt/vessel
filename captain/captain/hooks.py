@@ -143,23 +143,15 @@ app_license = "agpl-3.0"
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"captain.tasks.all"
-# 	],
-# 	"daily": [
-# 		"captain.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"captain.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"captain.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"captain.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+	"cron": {
+		"* * * * * 0/5": [
+			"captain.message_broker.doctype.nats_settings.nats_settings.trigger_sync_accounts",
+			"captain.message_broker.doctype.nats_user.nats_user.trigger_process_revoke_requests",
+			"captain.message_broker.doctype.nats_user.nats_user.trigger_process_revert_revocation_requests",
+		]
+	},
+}
 
 # Testing
 # -------
@@ -239,9 +231,8 @@ app_license = "agpl-3.0"
 # ]
 
 # Automatically update python controller files with type annotations for this app.
-# export_python_type_annotations = True
+export_python_type_annotations = True
 
 # default_log_clearing_doctypes = {
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
-
