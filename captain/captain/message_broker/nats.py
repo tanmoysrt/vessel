@@ -10,7 +10,7 @@ from captain.message_broker.nsc import NSC
 class NatsClient:
 	_nest_asyncio_applied = False
 
-	def __init__(self):
+	def __init__(self, user: str | None = None, account: str | None = None):
 		settings = frappe.get_value(
 			"NATS Settings", None, ["host", "port", "nsc_directory", "system_operator"], as_dict=True
 		)
@@ -20,6 +20,8 @@ class NatsClient:
 			operator=settings.system_operator,
 		)
 		self.system_operator = settings.system_operator
+		self.user = user or self.system_operator
+		self.account = account or self.system_operator
 		self.nc: nats.NATS = None
 
 		# Apply nest_asyncio only once
@@ -43,9 +45,7 @@ class NatsClient:
 		async def _connect():
 			self.nc = await nats.connect(
 				self.url,
-				user_credentials=self.nsc.get_user_credential_path(
-					self.system_operator, self.system_operator
-				),
+				user_credentials=self.nsc.get_user_credential_path(self.account, self.user),
 			)
 			await self.nc.flush()
 
@@ -68,6 +68,25 @@ class NatsClient:
 		if not self.loop.is_running() and not self.loop.is_closed():
 			self.loop.close()
 
+	# Subscription handlers
+	# ----------------------
+	def subscribe(self, subject, cb):
+		async def _subscribe():
+			js = self.nc.jetstream(timeout=30)
+			await js.subscribe(subject, cb=cb)
+			await self.nc.subscribe(subject, cb=cb)
+
+		self._run_async(_subscribe())
+
+	def publish(self, subject, payload: bytes):
+		async def _publish():
+			js = self.nc.jetstream(timeout=30)
+			await js.publish(subject, payload)
+
+		self._run_async(_publish())
+
+	# Stream CRUD operations
+	# ----------------------
 	def create_stream(self, stream_name, subjects):
 		async def _create_stream():
 			js = self.nc.jetstream(timeout=30)
