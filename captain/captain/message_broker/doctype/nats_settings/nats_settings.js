@@ -13,27 +13,18 @@ frappe.ui.form.on("NATS Settings", {
 			],
 		].forEach(([label, method, condition]) => {
 			if (condition) {
-				frm.add_custom_button(
-					label,
-					() => {
-						frappe.confirm(`Are you sure you want to ${label.toLowerCase()}?`, () =>
-							frm.call(method).then((r) => frm.refresh())
-						);
-					},
-					"Actions"
-				);
+				frm.add_custom_button(label, () => {
+					frappe.confirm(`Are you sure you want to ${label.toLowerCase()}?`, () =>
+						frm.call(method).then((r) => frm.refresh())
+					);
+				});
 			}
 		});
 
-		[
-			["Add Account", "add_account", frm.doc.is_nsc_initialized === 1],
-			["Revoke Account", "revoke_account", frm.doc.is_nsc_initialized === 1],
-			["Activate Account", "activate_account", frm.doc.is_nsc_initialized === 1],
-		].forEach(([label, method, condition]) => {
-			if (condition) {
-				frm.add_custom_button(
-					label,
-					() => {
+		[["Add Account", "add_account", frm.doc.is_nsc_initialized === 1]].forEach(
+			([label, method, condition]) => {
+				if (condition) {
+					frm.add_custom_button(label, () => {
 						frappe.prompt(
 							[
 								{
@@ -58,10 +49,9 @@ frappe.ui.form.on("NATS Settings", {
 							},
 							label
 						);
-					},
-					"Manage Accounts"
-				);
+					});
+				}
 			}
-		});
+		);
 	},
 });

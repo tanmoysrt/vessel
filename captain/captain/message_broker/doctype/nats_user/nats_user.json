@@ -5,20 +5,22 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "title",
   "user_id",
-  "account",
   "column_break_qubl",
   "status",
+  "account",
   "section_break_oerd",
   "subjects"
  ],
  "fields": [
   {
    "fieldname": "account",
-   "fieldtype": "Data",
+   "fieldtype": "Link",
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Account",
+   "options": "NATS Account",
    "reqd": 1,
    "search_index": 1,
    "set_only_once": 1
@@ -54,12 +56,17 @@
    "options": "Active\nRevoked\nRevocation Pending\nRevert Revocation Pending",
    "read_only": 1,
    "search_index": 1
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Title"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-10-05 03:36:06.368171",
+ "modified": "2025-10-05 15:31:29.830675",
  "modified_by": "Administrator",
  "module": "Message Broker",
  "name": "NATS User",
@@ -83,5 +90,6 @@
  "rows_threshold_for_grid_search": 20,
  "sort_field": "creation",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "title_field": "title"
 }

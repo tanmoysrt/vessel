@@ -20,9 +20,6 @@ class NATSSettings(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		from captain.message_broker.doctype.nats_account.nats_account import NATSAccount
-
-		accounts: DF.Table[NATSAccount]
 		host: DF.Data
 		is_nsc_initialized: DF.Check
 		nsc_directory: DF.Data
@@ -113,14 +110,16 @@ class NATSSettings(Document):
 			self.accounts = []
 			self.append(
 				"accounts",
+			)
+			frappe.get_doc(
 				{
 					"doctype": "NATS Account",
 					"account_name": self.system_operator,
 					"account_id": self.nsc.get_jwt_dict("account", self.system_operator).get("sub"),
 					"revoked": False,
 					"pending_sync": True,
-				},
-			)
+				}
+			).insert()
 		except Exception as e:
 			# Delete contents of NSC Directory in case of failure
 			self.nsc.cleanup()
@@ -159,7 +158,7 @@ class NATSSettings(Document):
 		self._lock_record()
 
 		# Check if account already exists
-		if frappe.db.exists("NATS Account", {"account_name": account_name}):
+		if frappe.db.exists("NATS Account", account_name):
 			frappe.throw(f"Account {account_name} already exists")
 
 		try:
@@ -176,57 +175,11 @@ class NATSSettings(Document):
 					"pending_sync": True,
 				}
 			).insert()
-			frappe.msgprint(f"Account {account_name} added successfully")
+			frappe.msgprint(
+				f"Account <a href='/app/nats-account/{account_name}'>{account_name}</a> added successfully"
+			)
 		except Exception as e:
 			frappe.throw(f"Failed to add account {account_name}: {e}")
-
-	@frappe.whitelist()
-	def activate_account(self, account_name: str) -> bool:
-		if not self.is_nsc_initialized:
-			frappe.throw("NSC is not initialized")
-
-		if account_name == self.system_operator:
-			frappe.throw("Account name cannot be same as System Operator Name")
-
-		self._lock_record()
-
-		account_doc_name = frappe.db.exists("NATS Account", {"account_name": account_name})
-		if not account_doc_name:
-			frappe.throw(f"Account {account_name} does not exist")
-
-		account_record = frappe.get_doc("NATS Account", account_doc_name, for_update=True)
-
-		try:
-			account_record.revoked = False
-			account_record.pending_sync = True
-			account_record.save()
-			frappe.msgprint(f"Account will be {account_name} activated soon")
-		except Exception as e:
-			frappe.throw(f"Failed to activate account {account_name}: {e}")
-
-	@frappe.whitelist()
-	def revoke_account(self, account_name: str) -> bool:
-		if not self.is_nsc_initialized:
-			frappe.throw("NSC is not initialized")
-
-		if account_name == self.system_operator:
-			frappe.throw("Account name cannot be same as System Operator Name")
-
-		self._lock_record()
-
-		account_doc_name = frappe.db.exists("NATS Account", {"account_name": account_name})
-		if not account_doc_name:
-			frappe.throw(f"Account {account_name} does not exist")
-
-		account_record = frappe.get_doc("NATS Account", account_doc_name, for_update=True)
-
-		try:
-			account_record.revoked = True
-			account_record.pending_sync = True
-			account_record.save()
-			frappe.msgprint(f"Account {account_name} revoked successfully")
-		except Exception as e:
-			frappe.throw(f"Failed to revoke account {account_name}: {e}")
 
 	# Info
 	# -----

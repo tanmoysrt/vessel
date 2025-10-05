@@ -19,9 +19,10 @@ class NATSUser(Document):
 
 		from captain.message_broker.doctype.nats_subject.nats_subject import NATSSubject
 
-		account: DF.Data
+		account: DF.Link
 		status: DF.Literal["Active", "Revoked", "Revocation Pending", "Revert Revocation Pending"]
 		subjects: DF.Table[NATSSubject]
+		title: DF.Data | None
 		user_id: DF.Data | None
 	# end: auto-generated types
 
@@ -33,16 +34,16 @@ class NATSUser(Document):
 	def sub_subjects(self) -> list[str]:
 		return [s.subject for s in self.subjects if s.type in ("Subscribe", "PubSub")]
 
-	def before_insert(self):
-		if not frappe.db.exists("NATS Account", {"account_name": self.account}):
-			frappe.throw(f"NATS Account {self.account} does not exist")
-
 	def after_insert(self):
 		nsc = get_nsc()
 		self.user_id = nsc.add_user(self.account, self.name, pub=self.pub_subjects, sub=self.sub_subjects)
 		self.db_update()
 
 	def on_update(self):
+		if not self.title:
+			self.title = self.name
+			self.db_update()
+
 		if self.flags.in_insert:
 			return
 
@@ -109,18 +110,14 @@ def process_revoke_requests():
 
 	# Trigger account sync for affected accounts
 	for account in accounts:
-		account_doc_name = frappe.db.exists("NATS Account", {"account_name": account})
-		if not account_doc_name:
-			continue
-
 		if has_job_timeout_exceeded():
 			continue
 
 		# Take lock
-		frappe.db.get_value("NATS Account", account_doc_name, "name", for_update=True)
+		frappe.db.get_value("NATS Account", account, "name", for_update=True)
 
 		# Set pending_sync to True
-		frappe.db.set_value("NATS Account", account_doc_name, "pending_sync", True)
+		frappe.db.set_value("NATS Account", account, "pending_sync", True)
 		frappe.db.commit()
 
 
@@ -145,18 +142,14 @@ def process_revert_revocation_requests():
 
 	# Trigger account sync for affected accounts
 	for account in accounts:
-		account_doc_name = frappe.db.exists("NATS Account", {"account_name": account})
-		if not account_doc_name:
-			continue
-
 		if has_job_timeout_exceeded():
 			continue
 
 		# Take lock
-		frappe.db.get_value("NATS Account", account_doc_name, "name", for_update=True)
+		frappe.db.get_value("NATS Account", account, "name", for_update=True)
 
 		# Set pending_sync to True
-		frappe.db.set_value("NATS Account", account_doc_name, "pending_sync", True)
+		frappe.db.set_value("NATS Account", account, "pending_sync", True)
 		frappe.db.commit()
 
 

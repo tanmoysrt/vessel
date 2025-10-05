@@ -38,10 +38,11 @@
   },
   {
    "fieldname": "account",
-   "fieldtype": "Data",
+   "fieldtype": "Link",
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Account",
+   "options": "NATS Account",
    "reqd": 1,
    "search_index": 1,
    "set_only_once": 1
@@ -50,7 +51,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-10-05 14:58:28.092312",
+ "modified": "2025-10-05 15:23:13.884104",
  "modified_by": "Administrator",
  "module": "Message Broker",
  "name": "NATS Stream",
