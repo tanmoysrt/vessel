@@ -2,16 +2,13 @@
 # For license information, please see license.txt
 
 from functools import cached_property
-from typing import TYPE_CHECKING
 
 import frappe
 import rq
 from frappe.model.document import Document
 
+from captain.message_broker.nsc import NSC
 from captain.utils.jobs import has_job_timeout_exceeded
-
-if TYPE_CHECKING:
-	from captain.message_broker.nsc import NSC
 
 
 class NATSSettings(Document):
@@ -29,7 +26,9 @@ class NATSSettings(Document):
 		host: DF.Data
 		is_nsc_initialized: DF.Check
 		nsc_directory: DF.Data
+		operator_account_id: DF.Data | None
 		operator_id: DF.Data | None
+		operator_user_id: DF.Data | None
 		port: DF.Int
 		system_operator: DF.Data
 		system_user_id: DF.Data | None
@@ -110,6 +109,18 @@ class NATSSettings(Document):
 
 		try:
 			self.nsc.init()
+			# Add an entry in accounts table
+			self.accounts = []
+			self.append(
+				"accounts",
+				{
+					"doctype": "NATS Account",
+					"account_name": self.system_operator,
+					"account_id": self.nsc.get_jwt_dict("account", self.system_operator).get("sub"),
+					"revoked": False,
+					"pending_sync": True,
+				},
+			)
 		except Exception as e:
 			# Delete contents of NSC Directory in case of failure
 			self.nsc.cleanup()
@@ -125,6 +136,15 @@ class NATSSettings(Document):
 		self.save()
 
 		frappe.msgprint("NSC initialized successfully")
+		frappe.enqueue_doc(
+			self.doctype,
+			self.name,
+			"sync_info",
+			queue="default",
+			timeout=300,
+			job_id=f"nats||sync_info||{self.name}",
+			enqueue_after_commit=True,
+		)
 
 	# Account Management
 	# ------------------
@@ -132,6 +152,9 @@ class NATSSettings(Document):
 	def add_account(self, account_name: str) -> bool:
 		if not self.is_nsc_initialized:
 			frappe.throw("NSC is not initialized")
+
+		if account_name == self.system_operator:
+			frappe.throw("Account name cannot be same as System Operator Name")
 
 		self._lock_record()
 
@@ -162,6 +185,9 @@ class NATSSettings(Document):
 		if not self.is_nsc_initialized:
 			frappe.throw("NSC is not initialized")
 
+		if account_name == self.system_operator:
+			frappe.throw("Account name cannot be same as System Operator Name")
+
 		self._lock_record()
 
 		account_doc_name = frappe.db.exists("NATS Account", {"account_name": account_name})
@@ -182,6 +208,9 @@ class NATSSettings(Document):
 	def revoke_account(self, account_name: str) -> bool:
 		if not self.is_nsc_initialized:
 			frappe.throw("NSC is not initialized")
+
+		if account_name == self.system_operator:
+			frappe.throw("Account name cannot be same as System Operator Name")
 
 		self._lock_record()
 
@@ -215,6 +244,18 @@ class NATSSettings(Document):
 			self.system_user_id = operator_jwt_decoded.get("nats", {}).get("system_account")
 			changed = True
 
+		# Sync operator account identifier
+		operator_account_jwt_decoded = self.nsc.get_jwt_dict("account", self.system_operator)
+		if self.operator_account_id != operator_account_jwt_decoded.get("sub"):
+			self.operator_account_id = operator_account_jwt_decoded.get("sub")
+			changed = True
+
+		# Sync operator user identifier
+		operator_user_jwt_decoded = self.nsc.get_jwt_dict("user", self.system_operator, self.system_operator)
+		if self.operator_user_id != operator_user_jwt_decoded.get("sub"):
+			self.operator_user_id = operator_user_jwt_decoded.get("sub")
+			changed = True
+
 		if changed:
 			self.save()
 
@@ -234,6 +275,18 @@ class NATSSettings(Document):
 	# ------------------
 	def _lock_record(self):
 		frappe.db.get_value(self.doctype, self.name, "name", for_update=True)
+
+
+def get_nsc() -> "NSC":
+	settings = frappe.get_value(
+		"NATS Settings", None, ["is_nsc_initialized", "nsc_directory", "system_operator"], as_dict=True
+	)
+	if not settings or not settings.is_nsc_initialized:
+		frappe.throw("NSC is not initialized")
+	return NSC(
+		nsc_directory=settings.nsc_directory,
+		operator=settings.system_operator,
+	)
 
 
 def sync_accounts():

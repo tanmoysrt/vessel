@@ -11,11 +11,15 @@
   "column_break_dgrc",
   "port",
   "section_break_qhid",
-  "nsc_directory",
-  "operator_id",
-  "column_break_xpsa",
   "system_operator",
+  "column_break_xpsa",
+  "nsc_directory",
+  "section_break_clrj",
+  "operator_id",
   "system_user_id",
+  "column_break_pyus",
+  "operator_account_id",
+  "operator_user_id",
   "section_break_vntw",
   "warning_message",
   "accounts"
@@ -103,13 +107,33 @@
    "fieldtype": "HTML",
    "label": "Warning Message",
    "options": "<span style=\"color: red\"><b>Note : </b>Never remove rows from child table manually. Instead use <b>Manage Accounts</b> actions.</span>"
+  },
+  {
+   "fieldname": "operator_account_id",
+   "fieldtype": "Data",
+   "label": "Operator Account ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "operator_user_id",
+   "fieldtype": "Data",
+   "label": "Operator User ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_clrj",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_pyus",
+   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-10-04 14:56:32.513133",
+ "modified": "2025-10-05 02:40:04.864858",
  "modified_by": "Administrator",
  "module": "Message Broker",
  "name": "NATS Settings",

@@ -145,7 +145,11 @@ app_license = "agpl-3.0"
 
 scheduler_events = {
 	"cron": {
-		"* * * * * 0/5": ["captain.message_broker.doctype.nats_settings.nats_settings.trigger_sync_accounts"]
+		"* * * * * 0/5": [
+			"captain.message_broker.doctype.nats_settings.nats_settings.trigger_sync_accounts",
+			"captain.message_broker.doctype.nats_user.nats_user.trigger_process_revoke_requests",
+			"captain.message_broker.doctype.nats_user.nats_user.trigger_process_revert_revocation_requests",
+		]
 	},
 }
 

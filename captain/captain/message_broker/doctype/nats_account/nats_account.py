@@ -31,7 +31,7 @@ class NATSAccount(Document):
 	def sync(self):
 		frappe.db.get_value(self.doctype, self.name, "name", for_update=True)
 
-		nats_settings: NATSSettings = frappe.get_cached_doc("NATS Settings", "NATS Settings")
+		nats_settings: NATSSettings = frappe.get_doc("NATS Settings", "NATS Settings")
 		if self.revoked:
 			nats_settings.nsc.revoke_account(self.account_name)
 		else:
