@@ -1,0 +1,3 @@
+*.db*
+config.yaml
+rads
