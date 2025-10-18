@@ -1,0 +1,57 @@
+# Debugging Portal - Internal State of Envoy
+admin:
+  access_log_path: /dev/null
+  address:
+    socket_address:
+      address: 127.0.0.1
+      port_value: 9000
+
+# Node Information
+node:
+  cluster: service_greeter
+  id: test-id
+
+# ADS Config
+dynamic_resources:
+  ads_config:
+    api_type: GRPC
+    transport_api_version: V3
+    set_node_on_first_message_only: true
+    grpc_services:
+      - envoy_grpc:
+          cluster_name: xds_cluster
+  lds_config:
+    resource_api_version: V3
+    ads: {}
+  cds_config:
+    resource_api_version: V3
+    ads: {}
+
+# xDS Server Config
+static_resources:
+  clusters:
+    - connect_timeout: 1s
+      http2_protocol_options: {}
+      name: xds_cluster
+      type: STATIC
+      load_assignment:
+        cluster_name: xds_cluster
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: 127.0.0.1
+                      port_value: 4223
+
+      typed_extension_protocol_options:
+        envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+          "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+          explicit_http_config:
+            http2_protocol_options:
+              connection_keepalive:
+                interval: 30s
+                timeout: 1s
+
+      upstream_connection_options:
+        tcp_keepalive: {}

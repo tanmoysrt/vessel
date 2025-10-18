@@ -1,0 +1,7 @@
+agent_id: "node1"
+database_file_path: "data.db"
+nats_config:
+  host: localhost
+  port: 4222
+ads_config:
+  bind_port: 4223
