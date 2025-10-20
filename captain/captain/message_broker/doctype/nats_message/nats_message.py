@@ -1,6 +1,8 @@
 # Copyright (c) 2025, Frappe Cloud and contributors
 # For license information, please see license.txt
 
+from functools import cached_property
+
 import frappe
 from frappe.model.document import Document
 
@@ -25,6 +27,13 @@ class NATSMessage(Document):
 		traceback: DF.LongText | None
 	# end: auto-generated types
 
+	@cached_property
+	def payload_dict(self) -> dict:
+		try:
+			return frappe.parse_json(self.payload)
+		except Exception:
+			return {}
+
 	def before_insert(self):
 		if not self.event or not self.stream:
 			# Subject format should be -> <stream>.<agent_id>.<request/reply>.<event>
@@ -36,11 +45,14 @@ class NATSMessage(Document):
 				self.stream = "unknown_stream"
 				self.event = "unknown_event"
 
+	@frappe.whitelist()
 	def trigger_message_handler(self):
-		if self.direction == "Outgoing" or not self.event or self.processed or self.failed:
+		if self.direction == "Outgoing" or not self.event or self.processed:
 			return
 
 		if not self.find_message_handlers():
+			self.processed = True
+			self.save(ignore_permissions=True, ignore_version=True)
 			return
 
 		frappe.enqueue_doc(
@@ -61,6 +73,7 @@ class NATSMessage(Document):
 		for method in methods:
 			try:
 				frappe.get_attr(method)(self)
+				self.db_set("failed", 0)
 				self.db_set("processed", 1)
 			except Exception as e:
 				self.db_set("failed", 1)

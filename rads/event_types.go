@@ -98,12 +98,8 @@ type HTTPRedirectRuleUpsertV1 struct {
 // This event will be received in proxy.<agent_id>.request.v1.http_redirect_rule.delete subject
 type HTTPRedirectRuleDeleteV1 struct {
 	CommonEventParamsV1
-	BindIP         string `json:"bind_ip"`
-	Port           int    `json:"port"`
-	Domain         string `json:"domain"`
-	RoutePrefix    string `json:"route_prefix"`
-	SchemeRedirect string `json:"scheme_redirect"`
-	HostRedirect   string `json:"host_redirect"`
-	PathRedirect   string `json:"path_redirect"`
-	StatusCode     int    `json:"status_code"`
+	BindIP      string `json:"bind_ip"`
+	Port        int    `json:"port"`
+	Domain      string `json:"domain"`
+	RoutePrefix string `json:"route_prefix"`
 }
