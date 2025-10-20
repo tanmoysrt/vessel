@@ -28,7 +28,9 @@
   "scheme_redirect",
   "column_break_cojw",
   "path_redirect",
-  "redirect_status_code"
+  "redirect_status_code",
+  "internal_use_section",
+  "last_request_id"
  ],
  "fields": [
   {
@@ -165,12 +167,24 @@
    "label": "Status Code",
    "non_negative": 1,
    "reqd": 1
+  },
+  {
+   "collapsible": 1,
+   "collapsible_depends_on": "eval: false",
+   "fieldname": "internal_use_section",
+   "fieldtype": "Section Break",
+   "label": "Internal Use"
+  },
+  {
+   "fieldname": "last_request_id",
+   "fieldtype": "Data",
+   "label": "Last Request ID"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-10-20 20:06:25.393300",
+ "modified": "2025-10-21 01:03:36.425282",
  "modified_by": "Administrator",
  "module": "Proxy",
  "name": "Proxy Redirect Rule",

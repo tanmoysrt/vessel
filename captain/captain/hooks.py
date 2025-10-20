@@ -239,7 +239,14 @@ export_python_type_annotations = True
 
 # NATS Incoming Message Handler Hooks
 # -----------------------------------
-nats_incoming_message_handlers = {}
+nats_incoming_message_handlers = {
+	"v1.ingress_rule.upsert": "captain.proxy.doctype.proxy_ingress_rule.proxy_ingress_rule.process_upsert_response",
+	"v1.ingress_rule.delete": "captain.proxy.doctype.proxy_ingress_rule.proxy_ingress_rule.process_delete_response",
+	"v1.http_redirect_rule.upsert": "captain.proxy.doctype.proxy_redirect_rule.proxy_redirect_rule.process_upsert_response",
+	"v1.http_redirect_rule.delete": "captain.proxy.doctype.proxy_redirect_rule.proxy_redirect_rule.process_delete_response",
+	"v1.tls_certificate.upsert": "captain.proxy.doctype.proxy_tls_certificate.proxy_tls_certificate.process_upsert_response",
+	"v1.tls_certificate.delete": "captain.proxy.doctype.proxy_tls_certificate.proxy_tls_certificate.process_delete_response",
+}
 
 """
 nats_incoming_message_handlers = {

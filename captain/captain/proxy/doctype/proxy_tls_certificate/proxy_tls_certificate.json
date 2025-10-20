@@ -1,15 +1,14 @@
 {
  "actions": [],
- "allow_rename": 1,
  "creation": "2025-10-20 19:06:18.651829",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
   "current_state",
   "column_break_nxrv",
-  "previoust_state",
+  "previous_state",
   "column_break_jijw",
-  "desired_status",
+  "desired_state",
   "section_break_gqja",
   "domain",
   "expiry_time",
@@ -18,7 +17,9 @@
   "section_break_tntk",
   "certificate_pem",
   "column_break_vwkx",
-  "private_key_pem"
+  "private_key_pem",
+  "section_break_rtse",
+  "last_request_id"
  ],
  "fields": [
   {
@@ -77,12 +78,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "desired_status",
-   "fieldtype": "Data",
-   "label": "Desired State",
-   "read_only": 1
-  },
-  {
    "fieldname": "section_break_gqja",
    "fieldtype": "Section Break"
   },
@@ -96,20 +91,40 @@
    "reqd": 1
   },
   {
-   "default": "Draft",
-   "fieldname": "previoust_state",
+   "collapsible": 1,
+   "collapsible_depends_on": "eval: false",
+   "fieldname": "section_break_rtse",
+   "fieldtype": "Section Break",
+   "label": "Internal Use"
+  },
+  {
+   "fieldname": "last_request_id",
    "fieldtype": "Data",
-   "label": "Previoust State",
+   "label": "Last Request ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "desired_state",
+   "fieldtype": "Data",
+   "label": "Desired State",
+   "read_only": 1
+  },
+  {
+   "default": "Draft",
+   "fieldname": "previous_state",
+   "fieldtype": "Data",
+   "label": "Previous State",
    "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-10-20 19:16:20.268636",
+ "modified": "2025-10-21 01:57:03.449743",
  "modified_by": "Administrator",
  "module": "Proxy",
  "name": "Proxy TLS Certificate",
+ "naming_rule": "By script",
  "owner": "Administrator",
  "permissions": [
   {

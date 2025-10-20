@@ -324,12 +324,14 @@ class NATSBackgroundMessageProcessor:
 		if not messages:
 			return 0
 
+		js = self.nats_client.jetstream()
+
 		# Create publish tasks
 		tasks = []
 		for msg_name in messages:
 			try:
-				msg = frappe.get_doc("NATS Message", msg_name)
-				task = asyncio.create_task(self.nats_client.publish(msg.subject, msg.payload.encode()))
+				msg: NATSMessage = frappe.get_doc("NATS Message", msg_name)
+				task = asyncio.create_task(js.publish(msg.subject, msg.payload.encode(), stream=msg.stream))
 				tasks.append((msg_name, task))
 			except Exception as e:
 				print(f"Error loading message {msg_name}: {e}")

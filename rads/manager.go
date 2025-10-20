@@ -394,6 +394,10 @@ func (m *Manager) publishResponses() {
 				return
 			}
 
+			if len(messages) == 0 {
+				continue
+			}
+
 			// Prepare the responses
 			for _, msg := range messages {
 				payload := ResponsePayloadV1{
@@ -409,10 +413,6 @@ func (m *Manager) publishResponses() {
 				payload.RequestedAt = *msg.RequestedAt
 
 				responsePayloads = append(responsePayloads, payload)
-			}
-
-			if len(messages) == 0 {
-				continue
 			}
 
 			// Publish the responses in reply subjects
@@ -433,7 +433,7 @@ func (m *Manager) publishResponses() {
 			}
 
 			// Mark messages as replied
-			tx = m.DB.ReadWrite.Model(&messages).Where("id IN (?)", ackedMessages).Updates(Message{Replied: true})
+			tx = m.DB.ReadWrite.Model(&Message{}).Where("id IN (?)", ackedMessages).Updates(Message{Replied: true})
 			if tx.Error != nil {
 				fmt.Printf("Failed to mark messages as replied: %v\n", tx.Error)
 			}
@@ -441,6 +441,7 @@ func (m *Manager) publishResponses() {
 			// Force GC
 			ackedMessages = []uint{}
 			messages = []Message{}
+			responsePayloads = []ResponsePayloadV1{}
 
 			time.Sleep(100 * time.Millisecond)
 		}
