@@ -17,6 +17,8 @@ type Config struct {
 type NatsConfig struct {
 	Host string `yaml:"host"`
 	Port int    `yaml:"port"`
+	NKey string `yaml:"nkey"`
+	JWT  string `yaml:"jwt"`
 }
 
 type ADSConfig struct {
