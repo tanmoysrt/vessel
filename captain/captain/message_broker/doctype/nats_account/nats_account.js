@@ -6,12 +6,12 @@ frappe.ui.form.on("NATS Account", {
 		[
 			[
 				"Revoke Account",
-				"revoke_account",
+				"revoke",
 				frm.doc.pending_sync === 0 && frm.doc.revoked === 0,
 			],
 			[
 				"Activate Account",
-				"activate_account",
+				"activate",
 				frm.doc.pending_sync === 0 && frm.doc.revoked === 1,
 			],
 			["Sync To Remote", "request_sync", frm.doc.pending_sync === 0],

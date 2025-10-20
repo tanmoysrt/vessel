@@ -236,3 +236,16 @@ export_python_type_annotations = True
 # default_log_clearing_doctypes = {
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
+
+# NATS Incoming Message Handler Hooks
+# -----------------------------------
+nats_incoming_message_handlers = {}
+
+"""
+nats_incoming_message_handlers = {
+    "v1.tls_certificate.upsert": "captain.proxy.tls_certificate.handler_upsert_request",
+}
+
+def handler_upsert_request(msg: NATSMessage):
+	pass
+"""
