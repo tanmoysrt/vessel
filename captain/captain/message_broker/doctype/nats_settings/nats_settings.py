@@ -20,6 +20,10 @@ class NATSSettings(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
+		from captain.message_broker.doctype.nats_stream_subject.nats_stream_subject import NATSStreamSubject
+
+		consumer_name: DF.Data
+		consumer_subjects: DF.Table[NATSStreamSubject]
 		host: DF.Data
 		is_nsc_initialized: DF.Check
 		nsc_directory: DF.Data
@@ -45,6 +49,7 @@ class NATSSettings(Document):
 		self.validate_host_and_port()
 		self.validate_nsc_directory()
 		self.validate_operator_name()
+		self.validate_consumer_subjects()
 
 	def validate_host_and_port(self):
 		if self.host == "":
@@ -68,6 +73,24 @@ class NATSSettings(Document):
 
 		if " " in self.system_operator:
 			frappe.throw("System Operator Name cannot contain spaces")
+
+	def validate_consumer_subjects(self):
+		if not self.consumer_subjects:
+			return
+
+		unique_subjects = set()
+		for subject in self.consumer_subjects:
+			# Ensure no space in subject
+			if " " in subject.subject:
+				frappe.throw(f"Consumer Subject '{subject.subject}' cannot contain spaces")
+			# Ensure no wide wildcards
+			if ">" == subject.subject or "*" == subject.subject:
+				frappe.throw(f"Consumer Subject '{subject.subject}' cannot be a wide wildcard ('>' or '*')")
+
+			unique_subjects.add(subject.subject)
+
+		if len(unique_subjects) != len(self.consumer_subjects):
+			frappe.throw("Duplicate Consumer Subjects found")
 
 	def on_update(self):
 		if (
@@ -106,11 +129,6 @@ class NATSSettings(Document):
 
 		try:
 			self.nsc.init()
-			# Add an entry in accounts table
-			self.accounts = []
-			self.append(
-				"accounts",
-			)
 			frappe.get_doc(
 				{
 					"doctype": "NATS Account",

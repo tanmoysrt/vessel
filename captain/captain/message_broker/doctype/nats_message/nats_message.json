@@ -1,0 +1,133 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2025-10-20 13:49:34.877990",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "direction",
+  "sent",
+  "failed",
+  "processed",
+  "column_break_sjok",
+  "subject",
+  "stream",
+  "event",
+  "section_break_yxcn",
+  "payload",
+  "traceback"
+ ],
+ "fields": [
+  {
+   "fieldname": "direction",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Direction",
+   "options": "Incoming\nOutgoing",
+   "reqd": 1,
+   "search_index": 1,
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "column_break_sjok",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_yxcn",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "payload",
+   "fieldtype": "Text",
+   "in_list_view": 1,
+   "label": "Payload",
+   "reqd": 1,
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "traceback",
+   "fieldtype": "Long Text",
+   "label": "Traceback",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "depends_on": "eval: doc.direction == \"Outgoing\"",
+   "fieldname": "sent",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Sent",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "default": "0",
+   "depends_on": "eval: doc.direction == \"Incoming\"",
+   "fieldname": "processed",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Processed",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "description": "&lt;stream&gt;.&lt;agent_id&gt;.reply.&lt;event_name&gt;<br>\nFor this specific format, event &amp; stream will be scrapped from subject.",
+   "fieldname": "subject",
+   "fieldtype": "Data",
+   "label": "Subject",
+   "reqd": 1,
+   "set_only_once": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "failed",
+   "fieldtype": "Check",
+   "label": "Failed",
+   "read_only": 1
+  },
+  {
+   "fieldname": "event",
+   "fieldtype": "Data",
+   "label": "Event",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "stream",
+   "fieldtype": "Data",
+   "label": "Stream",
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-10-20 18:04:47.101155",
+ "modified_by": "Administrator",
+ "module": "Message Broker",
+ "name": "NATS Message",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
