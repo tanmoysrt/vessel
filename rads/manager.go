@@ -453,7 +453,11 @@ func (m *Manager) publishResponses() {
 
 // createNATSConnection creates a new NATS connection to the configured NATS server
 func (m *Manager) createNATSConnection() (*nats.Conn, error) {
-	return nats.Connect(fmt.Sprintf("nats://%s:%d", m.Config.NatsConfig.Host, m.Config.NatsConfig.Port), nats.Name(m.Config.AgentID), nats.MaxReconnects(-1))
+	return nats.Connect(fmt.Sprintf("nats://%s:%d", m.Config.NatsConfig.Host, m.Config.NatsConfig.Port),
+		nats.Name(m.Config.AgentID),
+		nats.UserJWTAndSeed(m.NATS.Config.JWT, m.NATS.Config.NKey),
+		nats.MaxReconnects(-1),
+	)
 }
 
 // parseEventNameFromSubject extracts the event name from the NATS subject,
