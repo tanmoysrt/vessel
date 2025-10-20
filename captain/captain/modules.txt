@@ -2,4 +2,4 @@ Captain
 Message Broker
 Container
 Networking
-Ingress
+Proxy

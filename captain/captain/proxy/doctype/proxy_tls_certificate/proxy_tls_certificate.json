@@ -1,0 +1,133 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-10-20 19:06:18.651829",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "current_state",
+  "column_break_nxrv",
+  "previoust_state",
+  "column_break_jijw",
+  "desired_status",
+  "section_break_gqja",
+  "domain",
+  "expiry_time",
+  "column_break_vxuf",
+  "is_wildcard",
+  "section_break_tntk",
+  "certificate_pem",
+  "column_break_vwkx",
+  "private_key_pem"
+ ],
+ "fields": [
+  {
+   "fieldname": "domain",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Domain",
+   "reqd": 1,
+   "search_index": 1,
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "column_break_vxuf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_wildcard",
+   "fieldtype": "Check",
+   "label": "Is Wildcard",
+   "search_index": 1,
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "expiry_time",
+   "fieldtype": "Datetime",
+   "label": "Expiry Time",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_tntk",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "certificate_pem",
+   "fieldtype": "Long Text",
+   "label": "Certificate (PEM)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_vwkx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "private_key_pem",
+   "fieldtype": "Long Text",
+   "label": "Private Key (PEM)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_nxrv",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_jijw",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "desired_status",
+   "fieldtype": "Data",
+   "label": "Desired State",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_gqja",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "current_state",
+   "fieldtype": "Select",
+   "label": "Current State",
+   "options": "Draft\nCreating\nActive\nUpdating\nDeleting",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "default": "Draft",
+   "fieldname": "previoust_state",
+   "fieldtype": "Data",
+   "label": "Previoust State",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-10-20 19:16:20.268636",
+ "modified_by": "Administrator",
+ "module": "Proxy",
+ "name": "Proxy TLS Certificate",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
