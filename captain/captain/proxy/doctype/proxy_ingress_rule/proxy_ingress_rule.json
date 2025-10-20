@@ -1,0 +1,259 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-10-20 19:22:51.726782",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "current_state",
+  "column_break_ksvr",
+  "previous_state",
+  "column_break_jkui",
+  "desired_state",
+  "column_break_rozb",
+  "priority",
+  "listener_config_section",
+  "protocol",
+  "is_tls",
+  "column_break_qhvw",
+  "listener_bind_ip",
+  "column_break_wjbh",
+  "listener_port",
+  "matcher_section",
+  "domain",
+  "column_break_luus",
+  "route_prefix",
+  "backend_section",
+  "backend_resolver",
+  "bakend_host_name",
+  "backend_ip_addresses",
+  "backend_dns_resolver",
+  "column_break_cojw",
+  "backend_port",
+  "backend_is_tls",
+  "backend_sni_domain",
+  "security_section",
+  "allowed_ip_addresses",
+  "column_break_jdle",
+  "blocked_ip_addresses"
+ ],
+ "fields": [
+  {
+   "fieldname": "column_break_qhvw",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "protocol",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Protocol",
+   "options": "HTTP\nTCP",
+   "reqd": 1,
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "column_break_wjbh",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_tls",
+   "fieldtype": "Check",
+   "label": "Is TLS ?"
+  },
+  {
+   "fieldname": "listener_config_section",
+   "fieldtype": "Section Break",
+   "label": "Listener Config"
+  },
+  {
+   "depends_on": "eval: doc.protocol == \"HTTP\"",
+   "fieldname": "matcher_section",
+   "fieldtype": "Section Break",
+   "label": "Route"
+  },
+  {
+   "fieldname": "domain",
+   "fieldtype": "Data",
+   "label": "Domain",
+   "mandatory_depends_on": "eval: doc.protocol == \"HTTP\"",
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "column_break_luus",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "route_prefix",
+   "fieldtype": "Data",
+   "label": "Route Prefix",
+   "mandatory_depends_on": "eval: doc.protocol == \"HTTP\"",
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "backend_section",
+   "fieldtype": "Section Break",
+   "label": "Backend"
+  },
+  {
+   "default": "Static",
+   "fieldname": "backend_resolver",
+   "fieldtype": "Select",
+   "label": "Resolver",
+   "options": "Static\nDNS",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_cojw",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "backend_port",
+   "fieldtype": "Int",
+   "label": "Port",
+   "non_negative": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "listener_port",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Port",
+   "non_negative": 1,
+   "reqd": 1,
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "listener_bind_ip",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Bind IP",
+   "reqd": 1,
+   "set_only_once": 1
+  },
+  {
+   "depends_on": "eval: doc.backend_resolver == \"DNS\"",
+   "fieldname": "backend_dns_resolver",
+   "fieldtype": "Data",
+   "label": "DNS Resolver"
+  },
+  {
+   "depends_on": "eval: doc.backend_resolver == \"DNS\"",
+   "fieldname": "bakend_host_name",
+   "fieldtype": "Data",
+   "label": "Host Name",
+   "mandatory_depends_on": "eval: doc.backend_resolver == \"DNS\""
+  },
+  {
+   "depends_on": "eval: doc.backend_resolver == \"Static\"",
+   "fieldname": "backend_ip_addresses",
+   "fieldtype": "Table",
+   "label": "IP Addresses",
+   "mandatory_depends_on": "eval: doc.backend_resolver == \"Static\"",
+   "options": "Proxy IP Address"
+  },
+  {
+   "default": "0",
+   "fieldname": "backend_is_tls",
+   "fieldtype": "Check",
+   "label": "Is TLS ?"
+  },
+  {
+   "depends_on": "eval: doc.backend_is_tls",
+   "fieldname": "backend_sni_domain",
+   "fieldtype": "Data",
+   "label": "SNI Domain"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "current_state",
+   "fieldtype": "Select",
+   "label": "Current State",
+   "options": "Draft\nCreating\nActive\nUpdating\nDeleting",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_ksvr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "previous_state",
+   "fieldtype": "Data",
+   "label": "Previous State",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_jkui",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "desired_state",
+   "fieldtype": "Data",
+   "label": "Desired State",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_rozb",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "priority",
+   "fieldtype": "Int",
+   "label": "Priority",
+   "non_negative": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "security_section",
+   "fieldtype": "Section Break",
+   "label": "Security"
+  },
+  {
+   "fieldname": "allowed_ip_addresses",
+   "fieldtype": "Table",
+   "label": "Allowed IP Addresses",
+   "options": "Proxy IP Address"
+  },
+  {
+   "fieldname": "column_break_jdle",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "blocked_ip_addresses",
+   "fieldtype": "Table",
+   "label": "Blocked IP Addresses",
+   "options": "Proxy IP Address"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-10-20 20:12:55.390017",
+ "modified_by": "Administrator",
+ "module": "Proxy",
+ "name": "Proxy Ingress Rule",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

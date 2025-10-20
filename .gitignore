@@ -396,7 +396,6 @@ vite.config.ts.timestamp-*
 
 # custom
 scratchpad.md
-proxy
 bench
 vessel-bench
 nsc
