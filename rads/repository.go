@@ -180,14 +180,14 @@ func UpsertListener(db *gorm.DB, bindIP string, port int, protocol ProtocolType,
 // ===============================
 
 // FindBackend helps in finding the backend service record based on the given parameters.
-func FindBackend(db *gorm.DB, resolverType BackendResolverType, dnsResolver string, hosts StringList, port int, isTLS bool, sniDomain string) (*Backend, error) {
+func FindBackend(db *gorm.DB, resolverType BackendResolverType, dnsResolver string, hosts StringList, port int, isTLS bool, sniDomain string, proxyProtocolVersion ProxyProtocolVersion) (*Backend, error) {
 	hostsValue, err := hosts.Value()
 	if err != nil {
 		return nil, err
 	}
 
 	var backend Backend
-	err = db.Where("resolver_type = ? AND dns_resolver = ? AND hosts = ? AND port = ? AND is_tls = ? AND sni_domain = ?", resolverType, dnsResolver, hostsValue, port, isTLS, sniDomain).First(&backend).Error
+	err = db.Where("resolver_type = ? AND dns_resolver = ? AND hosts = ? AND port = ? AND is_tls = ? AND sni_domain = ? AND proxy_protocol_version = ?", resolverType, dnsResolver, hostsValue, port, isTLS, sniDomain, proxyProtocolVersion).First(&backend).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -199,7 +199,7 @@ func FindBackend(db *gorm.DB, resolverType BackendResolverType, dnsResolver stri
 }
 
 // UpsertBackend creates a new backend service record if it doesn't exist or updates the existing record if it exists.
-func UpsertBackend(db *gorm.DB, resolverType BackendResolverType, dnsResolver string, hosts StringList, port int, isTLS bool, sniDomain string) (*Backend, error) {
+func UpsertBackend(db *gorm.DB, resolverType BackendResolverType, dnsResolver string, hosts StringList, port int, isTLS bool, sniDomain string, proxyProtocolVersion ProxyProtocolVersion) (*Backend, error) {
 	// Validate port number
 	if !(port >= 1 && port <= 65535) {
 		return nil, errors.New("port must be between 1 and 65535")
@@ -211,7 +211,7 @@ func UpsertBackend(db *gorm.DB, resolverType BackendResolverType, dnsResolver st
 	}
 
 	// Check if the backend with the same config already exists
-	backend, err := FindBackend(db, resolverType, dnsResolver, hosts, port, isTLS, sniDomain)
+	backend, err := FindBackend(db, resolverType, dnsResolver, hosts, port, isTLS, sniDomain, proxyProtocolVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -224,13 +224,14 @@ func UpsertBackend(db *gorm.DB, resolverType BackendResolverType, dnsResolver st
 	// Insert the new backend record
 	// We don't need to care about the existing record, because unused backend will be deleted by pruneOrphanedResources()
 	backend = &Backend{
-		ID:           uuid.NewString(),
-		ResolverType: resolverType,
-		DNSResolver:  dnsResolver,
-		Hosts:        hosts,
-		Port:         port,
-		IsTLS:        isTLS,
-		SNIDomain:    sniDomain,
+		ID:                   uuid.NewString(),
+		ResolverType:         resolverType,
+		DNSResolver:          dnsResolver,
+		Hosts:                hosts,
+		Port:                 port,
+		IsTLS:                isTLS,
+		SNIDomain:            sniDomain,
+		ProxyProtocolVersion: proxyProtocolVersion,
 	}
 	return backend, db.Create(backend).Error
 }

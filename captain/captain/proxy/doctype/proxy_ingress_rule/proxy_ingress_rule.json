@@ -32,6 +32,8 @@
   "backend_port",
   "backend_is_tls",
   "backend_sni_domain",
+  "backend_enable_proxy_protocol",
+  "backend_proxy_protocol_version",
   "security_section",
   "allowed_ip_addresses",
   "column_break_jdle",
@@ -252,12 +254,26 @@
    "label": "Last Request ID",
    "read_only": 1,
    "search_index": 1
+  },
+  {
+   "depends_on": "eval: doc.backend_enable_proxy_protocol",
+   "fieldname": "backend_proxy_protocol_version",
+   "fieldtype": "Select",
+   "label": "Proxy Protocol Version",
+   "mandatory_depends_on": "eval: doc.backend_enable_proxy_protocol",
+   "options": "V1\nV2"
+  },
+  {
+   "default": "0",
+   "fieldname": "backend_enable_proxy_protocol",
+   "fieldtype": "Check",
+   "label": "Enable Proxy Protocol"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-10-21 00:41:13.831676",
+ "modified": "2025-10-24 01:51:55.898522",
  "modified_by": "Administrator",
  "module": "Proxy",
  "name": "Proxy Ingress Rule",
