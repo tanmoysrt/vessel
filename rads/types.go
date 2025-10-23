@@ -31,6 +31,27 @@ const (
 	DnsResolver    BackendResolverType = "dns"    // DNS-based resolution
 )
 
+type ProxyProtocolVersion int
+
+const (
+	ProxyProtocolNone ProxyProtocolVersion = iota // 0
+	ProxyProtocolV1                               // 1
+	ProxyProtocolV2                               // 2
+)
+
+func (p ProxyProtocolVersion) String() string {
+	switch p {
+	case ProxyProtocolNone:
+		return "None"
+	case ProxyProtocolV1:
+		return "V1"
+	case ProxyProtocolV2:
+		return "V2"
+	default:
+		return "Unknown"
+	}
+}
+
 // ===================
 // Core Manager Types
 // ===================
@@ -90,13 +111,14 @@ type ADSManager struct {
 
 // SnapshotGenerator converts database models into Envoy xDS API configuration
 type SnapshotGenerator struct {
-	version          string
-	numOfTrustedHops int
-	listeners        []Listener
-	backends         []Backend
-	ingressRules     []IngressRule
-	redirectRules    []HTTPRedirectRule
-	tlsCerts         []TLSCertificate
+	version                       string
+	numOfTrustedHops              int
+	enableDownstreamProxyProtocol bool
+	listeners                     []Listener
+	backends                      []Backend
+	ingressRules                  []IngressRule
+	redirectRules                 []HTTPRedirectRule
+	tlsCerts                      []TLSCertificate
 }
 
 // =====================

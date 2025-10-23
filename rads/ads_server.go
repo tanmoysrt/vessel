@@ -119,7 +119,7 @@ func (m *ADSManager) generateSnapshot(dbManager *DatabaseManager) error {
 	tx.Rollback()
 
 	// Generate Snapshot
-	version, snapshot, err := GenerateSnapshot(m.Config.NumOfTrustedHops, listeners, backends, ingressRules, httpRedirectRules, tlsCertificates)
+	version, snapshot, err := GenerateSnapshot(m.Config.NumOfTrustedHops, m.Config.EnableDownstreamProxyProtocol, listeners, backends, ingressRules, httpRedirectRules, tlsCertificates)
 	if err != nil {
 		return err
 	}

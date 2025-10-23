@@ -114,7 +114,7 @@ func (r *IngressRuleUpsertV1) Process(db *gorm.DB) (json.RawMessage, error) {
 	}
 
 	// Create / Update the backend
-	backend, err := UpsertBackend(db, r.BackendResolver, r.BackendDNSResolver, r.BackendHosts, r.BackendPort, r.IsTLS, r.BackendSNIDomain)
+	backend, err := UpsertBackend(db, r.BackendResolver, r.BackendDNSResolver, r.BackendHosts, r.BackendPort, r.IsTLS, r.BackendSNIDomain, r.BackendProxyProtocolVersion)
 	if err != nil {
 		return nil, fmt.Errorf("failed to upsert backend: %w", err)
 	}

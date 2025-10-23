@@ -50,21 +50,23 @@ type TLSCertificateDeleteV1 struct {
 // This event will be received in proxy.<agent_id>.request.v1.ingress_rule.upsert subject
 type IngressRuleUpsertV1 struct {
 	CommonEventParamsV1
-	Priority           int                 `json:"priority"`
-	BindIP             string              `json:"bind_ip"`
-	Port               int                 `json:"port"`
-	Protocol           ProtocolType        `json:"protocol"`
-	IsTLS              bool                `json:"is_tls"`
-	Domain             string              `json:"domain"`
-	RoutePrefix        string              `json:"route_prefix"`
-	AllowedCIDRs       []string            `json:"allowed_cidrs"`
-	DeniedCIDRs        []string            `json:"denied_cidrs"`
-	BackendResolver    BackendResolverType `json:"backend_resolver"`
-	BackendDNSResolver string              `json:"backend_dns_resolver"`
-	BackendHosts       []string            `json:"backend_hosts"` // For DNS Based Resolver, pass one value strictly
-	BackendPort        int                 `json:"backend_port"`
-	BackendIsTLS       bool                `json:"backend_is_tls"`
-	BackendSNIDomain   string              `json:"backend_sni_domain"`
+	Priority                    int                  `json:"priority"`
+	BindIP                      string               `json:"bind_ip"`
+	Port                        int                  `json:"port"`
+	Protocol                    ProtocolType         `json:"protocol"`
+	IsTLS                       bool                 `json:"is_tls"`
+	Domain                      string               `json:"domain"`
+	RoutePrefix                 string               `json:"route_prefix"`
+	AllowedCIDRs                []string             `json:"allowed_cidrs"`
+	DeniedCIDRs                 []string             `json:"denied_cidrs"`
+	BackendResolver             BackendResolverType  `json:"backend_resolver"`
+	BackendDNSResolver          string               `json:"backend_dns_resolver"`
+	BackendHosts                []string             `json:"backend_hosts"` // For DNS Based Resolver, pass one value strictly
+	BackendPort                 int                  `json:"backend_port"`
+	BackendProxyProtocolEnabled bool                 `json:"backend_enable_proxy_protocol"`
+	BackendIsTLS                bool                 `json:"backend_is_tls"`
+	BackendSNIDomain            string               `json:"backend_sni_domain"`
+	BackendProxyProtocolVersion ProxyProtocolVersion `gorm:"column:backend_proxy_protocol_version;index;default:0" json:"backend_proxy_protocol_version"`
 }
 
 // IngressRuleDeleteV1 is the event to delete an ingress rule.

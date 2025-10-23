@@ -24,10 +24,12 @@ class ProxyIngressRule(Document):
 
 		allowed_ip_addresses: DF.Table[ProxyIPAddress]
 		backend_dns_resolver: DF.Data
+		backend_enable_proxy_protocol: DF.Check
 		backend_host_name: DF.Data
 		backend_ip_addresses: DF.Table[ProxyIPAddress]
 		backend_is_tls: DF.Check
 		backend_port: DF.Int
+		backend_proxy_protocol_version: DF.Literal["V1", "V2"]
 		backend_resolver: DF.Literal["Static", "DNS"]
 		backend_sni_domain: DF.Data
 		blocked_ip_addresses: DF.Table[ProxyIPAddress]
@@ -43,6 +45,21 @@ class ProxyIngressRule(Document):
 		protocol: DF.Literal["HTTP", "TCP"]
 		route_prefix: DF.Data
 	# end: auto-generated types
+
+	def validate(self):
+		self.validate_ip_addresses()
+		self.validate_cidr_of_backend_ip_addresses()
+
+	def validate_ip_addresses(self):
+		for ip in self.backend_ip_addresses:
+			ip.validate()
+
+	def validate_cidr_of_backend_ip_addresses(self):
+		for ip in self.backend_ip_addresses:
+			if (ip.type == "V4" and ip.cidr != 32) or (ip.type == "V6" and ip.cidr != 128):
+				frappe.throw(
+					f"CIDR notation is not allowed in backend IP address: {ip.address}/{ip.cidr}. Please use /32 for ipv4 or /128 for ipv6."
+				)
 
 	def after_insert(self):
 		if not self.desired_state:
@@ -71,6 +88,14 @@ class ProxyIngressRule(Document):
 		self.last_request_id = str(uuid.uuid4())
 		self.save(ignore_version=True)
 
+		backend_proxy_protocol_version = 0
+
+		if self.backend_enable_proxy_protocol:
+			if self.backend_proxy_protocol_version == "V1":
+				backend_proxy_protocol_version = 1
+			elif self.backend_proxy_protocol_version == "V2":
+				backend_proxy_protocol_version = 2
+
 		publish_message(
 			request_id=self.last_request_id,
 			subject="proxy.node1.request.v1.ingress_rule.upsert",
@@ -92,6 +117,7 @@ class ProxyIngressRule(Document):
 				"backend_port": self.backend_port,
 				"backend_is_tls": bool(self.backend_is_tls),
 				"backend_sni_domain": self.backend_sni_domain,
+				"backend_proxy_protocol_version": backend_proxy_protocol_version,
 			},
 		)
 

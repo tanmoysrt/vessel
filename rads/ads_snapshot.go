@@ -2,8 +2,12 @@ package main
 
 import (
 	"fmt"
+	proxyProtocolListener "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/listener/proxy_protocol/v3"
 	tcpProxy "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/tcp_proxy/v3"
+	proxyProtocolUpstream "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/proxy_protocol/v3"
+	rawbuffer "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/raw_buffer/v3"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
+	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"sort"
 	"time"
@@ -28,6 +32,7 @@ import (
 
 func GenerateSnapshot(
 	numOfTrustedHops int,
+	enableDownstreamProxyProtocol bool,
 	listeners []Listener,
 	backends []Backend,
 	ingressRules []IngressRule,
@@ -44,13 +49,14 @@ func GenerateSnapshot(
 	})
 
 	sg := &SnapshotGenerator{
-		version:          fmt.Sprintf("%d", time.Now().Unix()),
-		numOfTrustedHops: numOfTrustedHops,
-		listeners:        listeners,
-		backends:         backends,
-		ingressRules:     ingressRules,
-		redirectRules:    redirectRules,
-		tlsCerts:         tlsCerts,
+		version:                       fmt.Sprintf("%d", time.Now().Unix()),
+		numOfTrustedHops:              numOfTrustedHops,
+		enableDownstreamProxyProtocol: enableDownstreamProxyProtocol,
+		listeners:                     listeners,
+		backends:                      backends,
+		ingressRules:                  ingressRules,
+		redirectRules:                 redirectRules,
+		tlsCerts:                      tlsCerts,
 	}
 	snapshot, err = sg.Generate()
 	version = sg.version
@@ -207,6 +213,19 @@ func (sg *SnapshotGenerator) buildListeners() []types.Resource {
 			FilterChains: []*listener.FilterChain{filterChain},
 		}
 
+		// Add PROXY Protocol in chain, if it's enabled at bootstrapping config
+		if sg.enableDownstreamProxyProtocol {
+			envoyListener.ListenerFilters = []*listener.ListenerFilter{
+				{
+					Name: wellknown.ProxyProtocol,
+					ConfigType: &listener.ListenerFilter_TypedConfig{
+						TypedConfig: MustMarshalAny(&proxyProtocolListener.ProxyProtocol{
+							AllowRequestsWithoutProxyProtocol: false,
+						}),
+					},
+				},
+			}
+		}
 		resources = append(resources, envoyListener)
 	}
 
@@ -485,21 +504,56 @@ func (sg *SnapshotGenerator) buildClusters() []types.Resource {
 			}
 		}
 
-		// Add upstream TLS
-		if b.IsTLS {
-			tlsContext := sg.buildUpstreamTLSContext(&b)
-			c.TransportSocket = &core.TransportSocket{
-				Name: "envoy.transport_sockets.tls",
-				ConfigType: &core.TransportSocket_TypedConfig{
-					TypedConfig: MustMarshalAny(tlsContext),
-				},
-			}
-		}
-
+		c.TransportSocket = sg.buildUpstreamTransportContext(&b)
 		resources = append(resources, c)
 	}
 
 	return resources
+}
+
+// buildUpstreamTransportContext builds the transport socket for upstream connections with optional PROXY protocol and TLS
+func (sg *SnapshotGenerator) buildUpstreamTransportContext(b *Backend) *core.TransportSocket {
+	var innerTransportSocket *core.TransportSocket
+
+	if b.IsTLS {
+		tlsContext := sg.buildUpstreamTLSContext(b)
+		innerTransportSocket = &core.TransportSocket{
+			Name: "envoy.transport_sockets.tls",
+			ConfigType: &core.TransportSocket_TypedConfig{
+				TypedConfig: MustMarshalAny(tlsContext),
+			},
+		}
+	} else {
+		innerTransportSocket = &core.TransportSocket{
+			Name: "envoy.transport_sockets.raw_buffer",
+			ConfigType: &core.TransportSocket_TypedConfig{
+				TypedConfig: MustMarshalAny(&rawbuffer.RawBuffer{}),
+			},
+		}
+	}
+
+	if b.ProxyProtocolVersion == ProxyProtocolNone {
+		return innerTransportSocket
+	}
+
+	// Wrap Inner Transport Socket in Proxy Protocol wrapper
+	envoyProxyProtocolVersion := core.ProxyProtocolConfig_V1
+	if b.ProxyProtocolVersion == ProxyProtocolV2 {
+		envoyProxyProtocolVersion = core.ProxyProtocolConfig_V2
+	}
+	proxyProtocolTransport := &proxyProtocolUpstream.ProxyProtocolUpstreamTransport{
+		Config: &core.ProxyProtocolConfig{
+			Version: envoyProxyProtocolVersion,
+		},
+		TransportSocket: innerTransportSocket,
+	}
+
+	return &core.TransportSocket{
+		Name: "envoy.transport_sockets.upstream_proxy_protocol",
+		ConfigType: &core.TransportSocket_TypedConfig{
+			TypedConfig: MustMarshalAny(proxyProtocolTransport),
+		},
+	}
 }
 
 // buildUpstreamTLSContext creates TLS context for clusters

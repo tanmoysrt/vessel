@@ -48,6 +48,9 @@ type Backend struct {
 	// Upstream TLS
 	IsTLS     bool   `gorm:"column:is_tls;index;default:false" json:"is_tls"`
 	SNIDomain string `gorm:"column:sni_domain;index;" json:"sni_domain,omitempty"`
+
+	// PROXY Protocol
+	ProxyProtocolVersion ProxyProtocolVersion `gorm:"column:proxy_protocol_version;index;default:0" json:"proxy_protocol_version"`
 }
 
 type IngressRule struct {
