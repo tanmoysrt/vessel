@@ -20,6 +20,9 @@ dynamic_resources:
     grpc_services:
       - envoy_grpc:
           cluster_name: xds_cluster
+        initial_metadata:
+          - key: authorization
+            value: "Bearer random-token-123"
   lds_config:
     resource_api_version: V3
     ads: {}
