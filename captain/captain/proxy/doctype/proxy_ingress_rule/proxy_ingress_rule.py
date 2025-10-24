@@ -18,9 +18,8 @@ class ProxyIngressRule(Document):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from frappe.types import DF
-
 		from captain.proxy.doctype.proxy_ip_address.proxy_ip_address import ProxyIPAddress
+		from frappe.types import DF
 
 		allowed_ip_addresses: DF.Table[ProxyIPAddress]
 		backend_dns_resolver: DF.Data
@@ -46,12 +45,25 @@ class ProxyIngressRule(Document):
 		route_prefix: DF.Data
 	# end: auto-generated types
 
+	@property
+	def allowed_cidrs(self) -> list[str]:
+		return [f"{ip.address}/{ip.cidr}" for ip in self.allowed_ip_addresses]
+
+	@property
+	def denied_cidrs(self) -> list[str]:
+		return [f"{ip.address}/{ip.cidr}" for ip in self.blocked_ip_addresses]
+
 	def validate(self):
+		if not self.domain:
+			self.domain = ""
+		if not self.route_prefix:
+			self.route_prefix = ""
+
 		self.validate_ip_addresses()
 		self.validate_cidr_of_backend_ip_addresses()
 
 	def validate_ip_addresses(self):
-		for ip in self.backend_ip_addresses:
+		for ip in self.backend_ip_addresses + self.allowed_ip_addresses + self.blocked_ip_addresses:
 			ip.validate()
 
 	def validate_cidr_of_backend_ip_addresses(self):
@@ -70,6 +82,11 @@ class ProxyIngressRule(Document):
 	def on_update(self):
 		if self.is_new():
 			return
+
+		if self.has_value_changed("domain") or self.has_value_changed("route_prefix"):
+			frappe.throw(
+				"Domain and Route Prefix cannot be changed after creation. Please create a new Ingress Rule instead."
+			)
 
 		if self.flags.in_upsert_or_delete:
 			return
@@ -107,8 +124,8 @@ class ProxyIngressRule(Document):
 				"is_tls": bool(self.is_tls),
 				"domain": self.domain,
 				"route_prefix": self.route_prefix,
-				"allowed_cidrs": [],
-				"denied_cidrs": [],
+				"allowed_cidrs": self.allowed_cidrs,
+				"denied_cidrs": self.denied_cidrs,
 				"backend_resolver": self.backend_resolver.lower(),
 				"backend_dns_resolver": self.backend_dns_resolver,
 				"backend_hosts": [self.backend_host_name]
@@ -139,7 +156,7 @@ class ProxyIngressRule(Document):
 			payload={
 				"bind_ip": self.listener_bind_ip,
 				"port": self.listener_port,
-				"protocol": self.protocol,
+				"protocol": self.protocol.lower(),
 				"domain": self.domain,
 				"route_prefix": self.route_prefix,
 			},

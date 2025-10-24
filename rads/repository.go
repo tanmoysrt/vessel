@@ -433,17 +433,15 @@ func pruneOrphanedResources(db *gorm.DB) error {
 	allListenerIDs = UniqueSortedStrings(allListenerIDs)
 
 	//	Remove these backend and listener from the database
-	if len(allBackendIDs) > 0 {
-		err := db.Where("id NOT IN (?)", allBackendIDs).Delete(&Backend{}).Error
-		if err != nil {
-			return fmt.Errorf("failed to delete unused backends: %w", err)
-		}
+	err := db.Where("id NOT IN (?)", allBackendIDs).Delete(&Backend{}).Error
+	if err != nil {
+		return fmt.Errorf("failed to delete unused backends: %w", err)
 	}
-	if len(allListenerIDs) > 0 {
-		err := db.Where("id NOT IN (?)", allListenerIDs).Delete(&Listener{}).Error
-		if err != nil {
-			return fmt.Errorf("failed to delete unused listeners: %w", err)
-		}
+
+	err = db.Where("id NOT IN (?)", allListenerIDs).Delete(&Listener{}).Error
+	if err != nil {
+		return fmt.Errorf("failed to delete unused listeners: %w", err)
 	}
+
 	return nil
 }

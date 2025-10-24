@@ -237,12 +237,6 @@ func IsNumeric(s string) bool {
 // Network Utilities
 // ==================
 
-// IsValidCIDR validates a CIDR notation (e.g., "192.168.1.0/24")
-func IsValidCIDR(cidr string) bool {
-	_, _, err := net.ParseCIDR(cidr)
-	return err == nil
-}
-
 // IsValidIPV4 validates an IP address
 func IsValidIPV4(s string) bool {
 	ip := net.ParseIP(s)
@@ -254,14 +248,17 @@ func IsValidIPV6(s string) bool {
 	return ip != nil && ip.To4() == nil
 }
 
-// ================
-// Slice Utilities
-// ================
-
-// UniqueSortedStrings returns a sorted slice with duplicates removed
-func UniqueSortedStrings(s []string) []string {
-	slices.Sort(s)
-	return slices.Compact(s)
+// ParseCIDR splits the ip address in ip and cidr part
+func ParseCIDR(cidr string) (string, int) {
+	for i := len(cidr) - 1; i >= 0; i-- {
+		if cidr[i] == '/' {
+			return cidr[:i], atoi(cidr[i+1:])
+		}
+	}
+	if containsColon(cidr) {
+		return cidr, 128
+	}
+	return cidr, 32
 }
 
 // ====================
@@ -278,4 +275,35 @@ func MustMarshalAny(pb interface{}) *anypb.Any {
 		panic(err)
 	}
 	return a
+}
+
+// ================
+// General Utilities
+// ================
+
+// UniqueSortedStrings returns a sorted slice with duplicates removed
+func UniqueSortedStrings(s []string) []string {
+	slices.Sort(s)
+	return slices.Compact(s)
+}
+
+// atoi converts string to integer
+func atoi(s string) int {
+	n := 0
+	for _, c := range s {
+		if c >= '0' && c <= '9' {
+			n = n*10 + int(c-'0')
+		}
+	}
+	return n
+}
+
+// containsColon checks if the given string contains at least one colon character ':' and returns true if found.
+func containsColon(s string) bool {
+	for _, c := range s {
+		if c == ':' {
+			return true
+		}
+	}
+	return false
 }

@@ -2,28 +2,31 @@ package main
 
 import (
 	"fmt"
-	proxyProtocolListener "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/listener/proxy_protocol/v3"
-	tcpProxy "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/tcp_proxy/v3"
-	proxyProtocolUpstream "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/proxy_protocol/v3"
-	rawbuffer "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/raw_buffer/v3"
-	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
-	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
-	"google.golang.org/protobuf/types/known/wrapperspb"
-	"sort"
-	"time"
-
 	cluster "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	endpoint "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 	listener "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
+	rbac "github.com/envoyproxy/go-control-plane/envoy/config/rbac/v3"
 	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
+	rbachttp "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/rbac/v3"
 	router "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/router/v3"
+	proxyProtocolListener "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/listener/proxy_protocol/v3"
 	hcm "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
+	rbacnet "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/rbac/v3"
+	tcpProxy "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/tcp_proxy/v3"
+	proxyProtocolUpstream "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/proxy_protocol/v3"
+	rawbuffer "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/raw_buffer/v3"
 	tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
+	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 	"github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/envoyproxy/go-control-plane/pkg/cache/v3"
 	"github.com/envoyproxy/go-control-plane/pkg/resource/v3"
+	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
+	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
+	"sort"
+	"time"
 )
 
 // Future Refactor:
@@ -119,6 +122,12 @@ func (sg *SnapshotGenerator) buildListeners() []types.Resource {
 				},
 				HttpFilters: []*hcm.HttpFilter{
 					{
+						Name: "envoy.filters.http.rbac",
+						ConfigType: &hcm.HttpFilter_TypedConfig{
+							TypedConfig: MustMarshalAny(&rbachttp.RBAC{}),
+						},
+					},
+					{
 						Name: "envoy.filters.http.router",
 						ConfigType: &hcm.HttpFilter_TypedConfig{
 							TypedConfig: MustMarshalAny(&router.Router{}),
@@ -156,6 +165,24 @@ func (sg *SnapshotGenerator) buildListeners() []types.Resource {
 				continue
 			}
 
+			// TCP Filters
+			var filters []*listener.Filter
+
+			// Build RBAC Rules filter for IP allowlisting and denylisting
+			// Order of filter matters, RBAC filter should be executed before tcp proxy filter
+			if rbacRules := sg.buildRBACRules(*ingressRule); rbacRules != nil {
+				rbacPolicy := &rbacnet.RBAC{
+					Rules:      rbacRules,
+					StatPrefix: fmt.Sprintf("ingress_%s", l.ID),
+				}
+				filters = append(filters, &listener.Filter{
+					Name: "envoy.filters.network.rbac",
+					ConfigType: &listener.Filter_TypedConfig{
+						TypedConfig: MustMarshalAny(rbacPolicy),
+					},
+				})
+			}
+
 			// TCP Proxy filter config
 			tcpConfig := &tcpProxy.TcpProxy{
 				StatPrefix: fmt.Sprintf("ingress_%s", l.ID),
@@ -164,18 +191,16 @@ func (sg *SnapshotGenerator) buildListeners() []types.Resource {
 				},
 			}
 
-			tcpAny := MustMarshalAny(tcpConfig)
-
-			// Prepare a filter chain
-			filterChain = &listener.FilterChain{
-				Filters: []*listener.Filter{
-					{
-						Name: "envoy.filters.network.tcp_proxy",
-						ConfigType: &listener.Filter_TypedConfig{
-							TypedConfig: tcpAny,
-						},
-					},
+			filters = append(filters, &listener.Filter{
+				Name: "envoy.filters.network.tcp_proxy",
+				ConfigType: &listener.Filter_TypedConfig{
+					TypedConfig: MustMarshalAny(tcpConfig),
 				},
+			})
+
+			// Prepare tcp filter chain
+			filterChain = &listener.FilterChain{
+				Filters: filters,
 			}
 		} else {
 			// This gateway is designed to handle TCP and HTTP protocols only
@@ -363,7 +388,7 @@ func (sg *SnapshotGenerator) buildRoutes() []types.Resource {
 
 // buildIngressRoute creates a route for an ingress rule
 func (sg *SnapshotGenerator) buildIngressRoute(rule IngressRule) *route.Route {
-	r := &route.Route{
+	envoyRoute := &route.Route{
 		Match: &route.RouteMatch{
 			PathSpecifier: &route.RouteMatch_Prefix{
 				Prefix: rule.RoutePrefix,
@@ -378,7 +403,88 @@ func (sg *SnapshotGenerator) buildIngressRoute(rule IngressRule) *route.Route {
 		},
 	}
 
-	return r
+	// Attempt to configure RBAC rules for ip allowlisting and blocklisting
+	if rbacRules := sg.buildRBACRules(rule); rbacRules != nil {
+		rbacPolicy := &rbachttp.RBACPerRoute{
+			Rbac: &rbachttp.RBAC{
+				Rules: rbacRules,
+			},
+		}
+		if envoyRoute.TypedPerFilterConfig == nil {
+			envoyRoute.TypedPerFilterConfig = make(map[string]*anypb.Any, 1)
+		}
+		envoyRoute.TypedPerFilterConfig["envoy.filters.http.rbac"] = MustMarshalAny(rbacPolicy)
+	}
+	return envoyRoute
+}
+
+// buildRBACRules generates RBAC rules for the provided IngressRule based on allowed and denied CIDRs.
+func (sg *SnapshotGenerator) buildRBACRules(rule IngressRule) *rbac.RBAC {
+	if len(rule.AllowedCIDRs) == 0 && len(rule.DeniedCIDRs) == 0 {
+		return nil
+	}
+
+	allow := &rbac.Principal{Identifier: &rbac.Principal_Any{Any: true}}
+	if len(rule.AllowedCIDRs) > 0 {
+		allow = sg.principalOR(rule.AllowedCIDRs)
+	}
+
+	var denyNot *rbac.Principal
+	if len(rule.DeniedCIDRs) > 0 {
+		denyNot = &rbac.Principal{
+			Identifier: &rbac.Principal_NotId{
+				NotId: sg.principalOR(rule.DeniedCIDRs),
+			},
+		}
+	}
+
+	var finalPrincipal *rbac.Principal
+	if denyNot != nil {
+		finalPrincipal = &rbac.Principal{
+			Identifier: &rbac.Principal_AndIds{
+				AndIds: &rbac.Principal_Set{Ids: []*rbac.Principal{allow, denyNot}},
+			},
+		}
+	} else {
+		finalPrincipal = allow
+	}
+
+	return &rbac.RBAC{
+		Action: rbac.RBAC_ALLOW,
+		Policies: map[string]*rbac.Policy{
+			"allow_and_not_deny": {
+				Permissions: []*rbac.Permission{{Rule: &rbac.Permission_Any{Any: true}}},
+				Principals:  []*rbac.Principal{finalPrincipal},
+			},
+		},
+	}
+}
+
+// buildRBACPrincipal builds an RBAC principal list for a set of CIDR addresses
+func (sg *SnapshotGenerator) buildRBACPrincipal(cidrs []string) []*rbac.Principal {
+	principals := make([]*rbac.Principal, 0, len(cidrs))
+	for _, cidr := range cidrs {
+		ip, prefixLen := ParseCIDR(cidr)
+		principals = append(principals, &rbac.Principal{
+			Identifier: &rbac.Principal_RemoteIp{
+				RemoteIp: &core.CidrRange{
+					AddressPrefix: ip,
+					PrefixLen:     &wrapperspb.UInt32Value{Value: uint32(prefixLen)},
+				},
+			},
+		})
+	}
+	return principals
+}
+
+// principalOR combines multiple CIDR-based rbac principals into a single OR principal to match source IPs
+func (sg *SnapshotGenerator) principalOR(cidrs []string) *rbac.Principal {
+	ids := sg.buildRBACPrincipal(cidrs)
+	return &rbac.Principal{
+		Identifier: &rbac.Principal_OrIds{
+			OrIds: &rbac.Principal_Set{Ids: ids},
+		},
+	}
 }
 
 // buildRedirectRoute creates a redirect route
