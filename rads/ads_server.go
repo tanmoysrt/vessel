@@ -4,7 +4,11 @@ import (
 	"fmt"
 	discoveryGRPC "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 	"net"
+	"strings"
 	"sync"
 )
 
@@ -17,6 +21,7 @@ func (m *ADSManager) RunServer(wg *sync.WaitGroup) {
 
 	// Configure gRPC server options
 	grpcOptions := []grpc.ServerOption{
+		grpc.StreamInterceptor(m.gRPCServerAuthMiddleware()),
 		grpc.MaxConcurrentStreams(grpcMaxConcurrentStreams),
 	}
 	grpcServer := grpc.NewServer(grpcOptions...)
@@ -43,6 +48,34 @@ func (m *ADSManager) RunServer(wg *sync.WaitGroup) {
 	<-m.ctx.Done()
 	fmt.Println("[ADS] Shutting down server...")
 	grpcServer.GracefulStop()
+}
+
+// gRPCServerAuthMiddleware is a gRPC server middleware that performs authentication using a bearer token.
+// It checks for a valid "authorization" metadata header and verifies the token against the configured auth token.
+func (m *ADSManager) gRPCServerAuthMiddleware() grpc.StreamServerInterceptor {
+	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+		md, ok := metadata.FromIncomingContext(ss.Context())
+		if !ok {
+			return status.Error(codes.Unauthenticated, "missing metadata")
+		}
+
+		vals := md.Get("authorization")
+		if len(vals) == 0 {
+			return status.Error(codes.Unauthenticated, "missing authorization header")
+		}
+
+		authHeader := vals[0]
+		if !strings.HasPrefix(authHeader, "Bearer ") {
+			return status.Error(codes.Unauthenticated, "invalid auth header format")
+		}
+
+		authToken := authHeader[7:]
+		if authToken != m.Config.AuthToken {
+			return status.Error(codes.PermissionDenied, "invalid bearer token")
+		}
+
+		return handler(srv, ss)
+	}
 }
 
 // generateAndBroadcastADSChanges creates a new snapshot and broadcasts to all connected proxies

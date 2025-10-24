@@ -22,10 +22,11 @@ type NatsConfig struct {
 }
 
 type ADSConfig struct {
-	Debug                         bool `yaml:"debug"`
-	BindPort                      int  `yaml:"bind_port"`
-	NumOfTrustedHops              int  `yaml:"num_of_trusted_hops"`
-	EnableDownstreamProxyProtocol bool `yaml:"enable_downstream_proxy_protocol"` // Enable PROXY protocol for all listeners globally
+	Debug                         bool   `yaml:"debug"`
+	BindPort                      int    `yaml:"bind_port"`
+	AuthToken                     string `yaml:"auth_token"`
+	NumOfTrustedHops              int    `yaml:"num_of_trusted_hops"`
+	EnableDownstreamProxyProtocol bool   `yaml:"enable_downstream_proxy_protocol"` // Enable PROXY protocol for all listeners globally
 }
 
 func loadConfig() (*Config, error) {
